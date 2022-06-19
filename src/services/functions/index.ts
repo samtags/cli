@@ -1,6 +1,8 @@
-// import tmp from 'tmp';
+import tmp from 'tmp';
 import fs from 'fs';
 import path from 'path';
+import fsExtra from 'fs-extra';
+import { spawnSync } from 'child_process';
 
 export const mockFn = jest.fn();
 
@@ -8,17 +10,72 @@ export default function functions() {
   if (process.env.NODE_ENV === 'test') mockFn();
 
   // get app dir
+  const appDir = process.cwd();
+
   // get project name
+  let projectName;
 
-  // const tempDotEnv = tmp.fileSync();
-  // const tempDockerComposeFile = tmp.fileSync();
+  // read package.json
+  const packageJson = fs.readFileSync(path.resolve(appDir, 'package.json'));
 
-  console.log('filename: ', __dirname);
-  const dotEnv = fs.readFileSync(path.resolve(__dirname, './services/env.ts'));
-  console.log(dotEnv);
+  try {
+    const packageObj = JSON.parse(packageJson.toString());
+    projectName = packageObj.name;
+  } catch {
+    // unsupported app
+  }
 
-  //
-  // fs.writeFileSync(dotEnv.name, '');
+  const tmpPath = path.resolve('/tmp/', 'appName');
 
-  // tempDotEnv.removeCallback();
+  if (fs.existsSync(tmpPath)) {
+    fs.rmSync(tmpPath, { recursive: true, force: true });
+  }
+
+  const tmpDir = tmp.dirSync({
+    mode: 0o644,
+    name: 'appName',
+  });
+
+  // copy docker conifgs
+  const dockerConfigSourcePath = path.resolve(
+    __dirname,
+    './services/functions/docker'
+  );
+
+  fsExtra.copySync(dockerConfigSourcePath, tmpDir.name);
+
+  // replace temp .env fields
+  const tempEnvPath = path.resolve(tmpDir.name, '.env');
+  const tempEnvFile = fs.readFileSync(tempEnvPath);
+  let tempEnvFileContentStr = tempEnvFile.toString();
+
+  tempEnvFileContentStr = tempEnvFileContentStr.replace('[dir]', appDir);
+  tempEnvFileContentStr = tempEnvFileContentStr.replace('[project]', projectName); // prettier-ignore
+
+  // Copy users .env to temp .env
+  const clientEnvFilePath = path.resolve(appDir, '.env');
+  const clientEnvFile = fs.readFileSync(clientEnvFilePath);
+
+  tempEnvFileContentStr += `\n${clientEnvFile.toString()}`;
+
+  fs.writeFileSync(tempEnvPath, tempEnvFileContentStr);
+
+  const b = spawnSync('docker-compose', [
+    '-f',
+    path.resolve(tmpDir.name, 'docker-compose.yml'),
+    'build',
+  ]);
+
+  console.log('Done: ', b.stdout.toString());
+  console.log('Done[err]: ', b.stderr.toString());
+
+  const up = spawnSync('docker-compose', [
+    '-f',
+    path.resolve(tmpDir.name, 'docker-compose.yml'),
+    'up',
+    '-d',
+  ]);
+
+  console.log('Done: ', up.stdout.toString());
+  console.log('Done[err]: ', up.stderr.toString());
 }

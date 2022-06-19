@@ -27,7 +27,7 @@ function runPostBuildScripts() {
     console.log(data.toString());
     if (data.toString().includes('[post-script]: functions (COMPLETED)')) {
       // exit script
-      process.exit();
+      process.exit(0);
     }
   });
 }

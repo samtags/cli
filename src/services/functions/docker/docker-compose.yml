@@ -1,12 +1,11 @@
 version: '3.8'
 services:
   function:
-    container_name: ${appName_PROJECT}
     build:
-      context: ./
+      context: ${appName_DIR}
       dockerfile: ./Dockerfile
     env_file:
-      - .env
-      - ${appName_DIR}/.env
+      - ./.env
+    container_name: ${appName_PROJECT}
     ports:
-      - '${PORT}:${PORT}'
+      - ${PORT}:${PORT}
