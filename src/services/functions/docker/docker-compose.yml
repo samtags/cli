@@ -3,9 +3,12 @@ services:
   function:
     build:
       context: ${appName_DIR}
-      dockerfile: ./Dockerfile
+      dockerfile: ${appName_TMP_PATH}/Dockerfile
     env_file:
       - ./.env
     container_name: ${appName_PROJECT}
+    volumes:
+      - ${appName_DIR}:/usr/src/app
+      - /usr/src/app/.config
     ports:
       - ${PORT}:${PORT}

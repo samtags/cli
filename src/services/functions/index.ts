@@ -25,7 +25,7 @@ export default function functions() {
     // unsupported app
   }
 
-  const tmpPath = path.resolve('/tmp/', 'appName');
+  const tmpPath = path.resolve('/tmp/', projectName);
 
   if (fs.existsSync(tmpPath)) {
     fs.rmSync(tmpPath, { recursive: true, force: true });
@@ -33,7 +33,7 @@ export default function functions() {
 
   const tmpDir = tmp.dirSync({
     mode: 0o644,
-    name: 'appName',
+    name: projectName,
   });
 
   // copy docker conifgs
@@ -51,6 +51,7 @@ export default function functions() {
 
   tempEnvFileContentStr = tempEnvFileContentStr.replace('[dir]', appDir);
   tempEnvFileContentStr = tempEnvFileContentStr.replace('[project]', projectName); // prettier-ignore
+  tempEnvFileContentStr = tempEnvFileContentStr.replace('[tmpPath]', tmpDir.name); // prettier-ignore
 
   // Copy users .env to temp .env
   const clientEnvFilePath = path.resolve(appDir, '.env');
@@ -64,6 +65,8 @@ export default function functions() {
     '-f',
     path.resolve(tmpDir.name, 'docker-compose.yml'),
     'build',
+    '--no-cache',
+    '--force-rm',
   ]);
 
   console.log('Done: ', b.stdout.toString());
