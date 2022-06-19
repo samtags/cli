@@ -13,5 +13,10 @@ export default function helper() {
     .description('Start appName service')
     .option('-f, --functions', 'Starts functions service locally');
 
+  program
+    .command('stop')
+    .description('Stop appName service')
+    .option('-f, --functions', 'Stops functions service locally');
+
   program.parse();
 }

@@ -1,6 +1,7 @@
 import minimist from 'minimist';
 import helper from './help';
-import functions from './services/functions';
+import startFunction from './services/functions/start';
+import stopFunction from './services/functions/stop';
 
 const argv = minimist(process.argv.slice(2), {
   boolean: ['function'],
@@ -11,7 +12,11 @@ export default function start(argv: minimist.ParsedArgs) {
 
   if (argv._.includes('start')) {
     // start function
-    return functions();
+    if (argv.functions) return startFunction();
+  }
+
+  if (argv._.includes('stop')) {
+    if (argv.functions) return stopFunction();
   }
 }
 

@@ -1,5 +1,5 @@
 import app from '../src';
-import { mockFn } from '../src/services/functions';
+import { mockFn } from '../src/services/functions/start';
 
 describe('Should invoke functions', () => {
   it('Should invoke function when user passed start --functions', () => {

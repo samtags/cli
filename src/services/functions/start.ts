@@ -6,7 +6,7 @@ import { spawnSync } from 'child_process';
 
 export const mockFn = jest.fn();
 
-export default function functions() {
+export default function startFunction() {
   if (process.env.NODE_ENV === 'test') mockFn();
 
   // get app dir
