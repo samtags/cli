@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { spawnSync } from 'child_process';
+import os from 'os';
 
 export const mockFn = jest.fn();
 
@@ -25,7 +26,7 @@ export default function stopFunction() {
     // unsupported app
   }
 
-  const tmpPath = path.resolve('/tmp/', projectName);
+  const tmpPath = path.resolve(os.tmpdir(), projectName);
 
   if (fs.existsSync(tmpPath)) {
     const b = spawnSync('docker-compose', [
