@@ -19,8 +19,6 @@ export default function initFunction() {
 
   inquirer.prompt(questions).then(async (answers: any) => {
     // todo: check if project name is existing to the account
-    console.log(JSON.stringify(answers, null, '  '));
-
     const { projectName } = answers;
 
     // copy files to the current directory where the script run
