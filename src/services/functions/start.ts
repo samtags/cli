@@ -1,8 +1,9 @@
-import tmp from 'tmp';
 import fs from 'fs';
 import path from 'path';
 import fsExtra from 'fs-extra';
 import { spawnSync } from 'child_process';
+import os from 'os';
+import chmodr from 'chmodr';
 
 export const mockFn = jest.fn();
 
@@ -25,16 +26,17 @@ export default function startFunction() {
     // unsupported app
   }
 
-  const tmpPath = path.resolve('/tmp/', projectName);
+  const tmpDir = path.resolve(os.tmpdir(), projectName);
 
-  if (fs.existsSync(tmpPath)) {
-    fs.rmSync(tmpPath, { recursive: true, force: true });
+  if (fs.existsSync(tmpDir)) {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 
-  const tmpDir = tmp.dirSync({
-    mode: 0o644,
-    name: projectName,
-  });
+  // create temp dir
+  fs.mkdirSync(tmpDir);
+
+  // set permission of tmp dir
+  fs.chmodSync(tmpDir, 0o700);
 
   // copy docker conifgs
   const dockerConfigSourcePath = path.resolve(
@@ -42,16 +44,19 @@ export default function startFunction() {
     './services/functions/docker'
   );
 
-  fsExtra.copySync(dockerConfigSourcePath, tmpDir.name);
+  fsExtra.copySync(dockerConfigSourcePath, tmpDir);
+
+  // change permission
+  chmodr(tmpDir, 0o777, () => {});
 
   // replace temp .env fields
-  const tempEnvPath = path.resolve(tmpDir.name, '.env');
+  const tempEnvPath = path.resolve(tmpDir, '.env');
   const tempEnvFile = fs.readFileSync(tempEnvPath);
   let tempEnvFileContentStr = tempEnvFile.toString();
 
   tempEnvFileContentStr = tempEnvFileContentStr.replace('[dir]', appDir);
   tempEnvFileContentStr = tempEnvFileContentStr.replace('[project]', projectName); // prettier-ignore
-  tempEnvFileContentStr = tempEnvFileContentStr.replace('[tmpPath]', tmpDir.name); // prettier-ignore
+  tempEnvFileContentStr = tempEnvFileContentStr.replace('[tmpPath]', tmpDir); // prettier-ignore
 
   // Copy users .env to temp .env
   const clientEnvFilePath = path.resolve(appDir, '.env');
@@ -63,7 +68,7 @@ export default function startFunction() {
 
   const b = spawnSync('docker-compose', [
     '-f',
-    path.resolve(tmpDir.name, 'docker-compose.yml'),
+    path.resolve(tmpDir, 'docker-compose.yml'),
     'build',
     '--no-cache',
     '--force-rm',
@@ -74,7 +79,7 @@ export default function startFunction() {
 
   const up = spawnSync('docker-compose', [
     '-f',
-    path.resolve(tmpDir.name, 'docker-compose.yml'),
+    path.resolve(tmpDir, 'docker-compose.yml'),
     'up',
     '-d',
   ]);
