@@ -1,7 +1,7 @@
 const { spawn } = require('child_process');
 const path = require('path');
 const through2 = require('through2');
-const addShebangFlag = require('./post.build').addShebangFlag;
+const { makeExecutable, addShebangFlag } = require('./post.build');
 
 const start = spawn('tsdx', ['watch']);
 
@@ -18,6 +18,7 @@ function processErr(buff, enc, next) {
   if (output.includes('Compiled successfully')) {
     runPostBuildScripts();
     addShebangFlag();
+    makeExecutable();
   }
 
   next(null, buff);
