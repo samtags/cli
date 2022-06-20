@@ -13,12 +13,14 @@ export default function stopFunction() {
   // get project name
   let projectName;
 
-  // read package.json
-  const packageJson = fs.readFileSync(path.resolve(appDir, 'package.json'));
+  // read app config
+  const configJson = fs.readFileSync(
+    path.resolve(appDir, '.config', '.app-config.json')
+  );
 
   try {
-    const packageObj = JSON.parse(packageJson.toString());
-    projectName = packageObj.name;
+    const configObj = JSON.parse(configJson.toString());
+    projectName = configObj.project.name;
   } catch {
     // unsupported app
   }
